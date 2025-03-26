@@ -316,21 +316,34 @@ void Display8() {
     double tmax = 5 * pi;
     double ratia = 0.01;
 
+    // Setăm matricea ModelView și o inițializăm cu identitatea
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Rotire cu 90° în jurul axei Z, anti-orar
+    glRotatef(50.0f, 0.0f, 0.0f, 1.0f);
+
     glBegin(GL_LINE_STRIP);
     for (double t = 0; t <= tmax; t += ratia) {
-        double r = a * exp(1 + t); // Formula spiralei logaritmice
+        // Formula spiralei logaritmice
+        double r = a * exp(1 + t);
 
+        // Coordonatele inițiale (fără rotire)
         double x = r * cos(t);
         double y = r * sin(t);
 
-        float colorFactor = t / tmax;
-        glColor3f(colorFactor, 0, 0);
+        // Factor de culoare pe roșu, variază între 0 și 1
+        float colorFactor = static_cast<float>(t / tmax);
+        glColor3f(colorFactor, 0.0f, 0.0f);
 
-        glVertex2f(x, y);
+        // Desenăm punctul (OpenGL deja îl va roti prin glRotatef)
+        glVertex2f(static_cast<GLfloat>(x), static_cast<GLfloat>(y));
     }
     glEnd();
+
     glFlush();
 }
+
 
 
 
