@@ -235,23 +235,23 @@ class OglSimpleRenderer():
     def display(self):
         dt = self.getDt()
         if not self.paused:
-            accel = [0, 0, -10]#gravity
-            if self.shake:
-                self.shake = False
-                #The speed we want to add if the accel were to act for a whole second.
-                accel[0] += r(10 / dt)
-                accel[1] += r(10 / dt)
-                #To oppose gravity and down-collision plasticity.
-                accel[2] += r(50 / dt)
-            for o in self.objects[1:]:  #Quick hack: don't integrate the first object, the larger box.
-                self.integrate(o, accel = accel, dt = dt, collisionElasticity = 0.99, collisionFriction = 0.001)
+            accel = [0, 0, -10]  # gravity
+        if self.shake:
+            self.shake = False
+            # The speed we want to add if the accel were to act for a whole second.
+            accel[0] += r(10 / dt)
+            accel[1] += r(10 / dt)
+            # To oppose gravity and down-collision plasticity.
+            accel[2] += r(50 / dt)
+        for o in self.objects[1:]:  # Quick hack: don't integrate the first object, the larger box.
+            self.integrate(o, accel = accel, dt = dt, collisionElasticity = 0.7, collisionFriction = 0.15)
         self.setProjection()
         self.setModelView()
         glMatrixMode(GL_MODELVIEW)
         for o in self.objects:
             self.render(o)
 
-    def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.002):
+    def integrate(self, obj, accel = [0, 0, 0], dt = 1, collisionElasticity = 0.99, collisionFriction = 0.2):
         '''Integrade the motion of the object, taking into account acceleration, speed, position, and time.
         Also, compute collision with the scene (self.sceneVolume[]).
         collisionElasticity means: how much of the speed is preserved in the direction which caused the collision.
@@ -265,62 +265,63 @@ class OglSimpleRenderer():
         #        speed be updated first, and then position (using the updated speed).
         #4) (1p) Do particle collision with the bounding box.
         #5) (1p) Apply collision elasticity (0.5p) and collision friction (0.5p).
-    # 1) and 2) and 3) Semi-implicit Euler integration
-    # First update velocity with acceleration
-    vel[0] += accel[0] * dt
-    vel[1] += accel[1] * dt
-    vel[2] += accel[2] * dt
-    
-    # Then update position with the new velocity
-    pos[0] += vel[0] * dt
-    pos[1] += vel[1] * dt
-    pos[2] += vel[2] * dt
-    
-    # 4) Collision with bounding box
-    xmin, xmax, ymin, ymax, zmin, zmax = self.sceneVolume
-    
-    # Check and resolve collisions for each dimension
-    # X-axis collision
-    if pos[0] < xmin:
-        pos[0] = xmin
-        vel[0] = -vel[0] * collisionElasticity
-        # Apply friction to other directions
-        vel[1] *= (1.0 - collisionFriction)
-        vel[2] *= (1.0 - collisionFriction)
-    elif pos[0] > xmax:
-        pos[0] = xmax
-        vel[0] = -vel[0] * collisionElasticity
-        # Apply friction to other directions
-        vel[1] *= (1.0 - collisionFriction)
-        vel[2] *= (1.0 - collisionFriction)
-    
-    # Y-axis collision
-    if pos[1] < ymin:
-        pos[1] = ymin
-        vel[1] = -vel[1] * collisionElasticity
-        # Apply friction to other directions
-        vel[0] *= (1.0 - collisionFriction)
-        vel[2] *= (1.0 - collisionFriction)
-    elif pos[1] > ymax:
-        pos[1] = ymax
-        vel[1] = -vel[1] * collisionElasticity
-        # Apply friction to other directions
-        vel[0] *= (1.0 - collisionFriction)
-        vel[2] *= (1.0 - collisionFriction)
-    
-    # Z-axis collision
-    if pos[2] < zmin:
-        pos[2] = zmin
-        vel[2] = -vel[2] * collisionElasticity
-        # Apply friction to other directions
-        vel[0] *= (1.0 - collisionFriction)
-        vel[1] *= (1.0 - collisionFriction)
-    elif pos[2] > zmax:
-        pos[2] = zmax
-        vel[2] = -vel[2] * collisionElasticity
-        # Apply friction to other directions
-        vel[0] *= (1.0 - collisionFriction)
-        vel[1] *= (1.0 - collisionFriction)
+        
+        # 1) and 2) and 3) Semi-implicit Euler integration
+        # First update velocity with acceleration
+        vel[0] += accel[0] * dt
+        vel[1] += accel[1] * dt
+        vel[2] += accel[2] * dt
+        
+        # Then update position with the new velocity
+        pos[0] += vel[0] * dt
+        pos[1] += vel[1] * dt
+        pos[2] += vel[2] * dt
+        
+        # 4) Collision with bounding box
+        xmin, xmax, ymin, ymax, zmin, zmax = self.sceneVolume
+        
+        # Check and resolve collisions for each dimension
+        # X-axis collision
+        if pos[0] < xmin:
+            pos[0] = xmin
+            vel[0] = -vel[0] * collisionElasticity
+            # Apply friction to other directions
+            vel[1] *= (1.0 - collisionFriction)
+            vel[2] *= (1.0 - collisionFriction)
+        elif pos[0] > xmax:
+            pos[0] = xmax
+            vel[0] = -vel[0] * collisionElasticity
+            # Apply friction to other directions
+            vel[1] *= (1.0 - collisionFriction)
+            vel[2] *= (1.0 - collisionFriction)
+        
+        # Y-axis collision
+        if pos[1] < ymin:
+            pos[1] = ymin
+            vel[1] = -vel[1] * collisionElasticity
+            # Apply friction to other directions
+            vel[0] *= (1.0 - collisionFriction)
+            vel[2] *= (1.0 - collisionFriction)
+        elif pos[1] > ymax:
+            pos[1] = ymax
+            vel[1] = -vel[1] * collisionElasticity
+            # Apply friction to other directions
+            vel[0] *= (1.0 - collisionFriction)
+            vel[2] *= (1.0 - collisionFriction)
+        
+        # Z-axis collision
+        if pos[2] < zmin:
+            pos[2] = zmin
+            vel[2] = -vel[2] * collisionElasticity
+            # Apply friction to other directions
+            vel[0] *= (1.0 - collisionFriction)
+            vel[1] *= (1.0 - collisionFriction)
+        elif pos[2] > zmax:
+            pos[2] = zmax
+            vel[2] = -vel[2] * collisionElasticity
+            # Apply friction to other directions
+            vel[0] *= (1.0 - collisionFriction)
+            vel[1] *= (1.0 - collisionFriction)
         
     def render(self, obj):
         vertVbo, colVbo, l, cc, primitive, pos, _, _ = obj
@@ -408,4 +409,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
